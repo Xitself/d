@@ -1,0 +1,1 @@
+game.Players.LocalPlayer:Kick = function() print("Kick attempt blocked!") end
