@@ -34,15 +34,7 @@ mt.__index = newcclosure(function(self, b)
     return oldindex(self, b)
 end)
 
-for i, item in ipairs(workspace.Purchases:GetChildren()) do
-    if item.Name == "MVPurchases" then 
-        for i, item in ipairs(item:GetChildren()) do
-            if item.Name == "[Group Armor]\010[12 Wins]" then
-                item.Parent.Name = "Group" 
-            end
-        end
-    end
-end
+
 
 local nexus = loadstring(game:HttpGet("https://github.com/raditself/d/releases/download/x/xPip.txt"))()
 local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/raditself/d/main/BetterSaveManager"))()
