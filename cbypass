@@ -1,0 +1,343 @@
+
+local UserInputService = game:GetService("UserInputService")
+
+-- GUI Init
+
+local GUI = Instance.new("ScreenGui")
+GUI.Parent = game.CoreGui
+GUI.IgnoreGuiInset = true
+GUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling -- Add these lines
+
+local opened = false
+local numberCommands = 0
+
+-- GUI Building
+
+local ScreenFrame = Instance.new("Frame")
+ScreenFrame.Position = UDim2.new(0, 0, 0, 0)
+ScreenFrame.Size = UDim2.new(1, 0, 1, 0)
+ScreenFrame.BackgroundTransparency = 1
+ScreenFrame.Parent = GUI
+ScreenFrame.ZIndex = 1
+ScreenFrame.Active = false
+
+local BlurFrame = Instance.new("Frame")
+BlurFrame.Position = UDim2.new(0, 0, 0, 0)
+BlurFrame.Size = UDim2.new(1, 0, 1, 100)
+BlurFrame.Position = UDim2.new(0, 0, 0, -100)
+BlurFrame.BackgroundTransparency = 0.5
+BlurFrame.BackgroundColor3 = Color3.new(0.184314, 0.184314, 0.184314)
+BlurFrame.Parent = GUI
+BlurFrame.ZIndex = 1
+BlurFrame.Active = false
+
+
+local SearchBar = Instance.new("Frame")
+SearchBar.Size = UDim2.new(0, 600, 0, 50)
+SearchBar.Position = UDim2.new(0.5, -300, 0.3, 0)
+SearchBar.BackgroundTransparency = 0
+SearchBar.BackgroundColor3 = Color3.new(0.156863, 0.156863, 0.156863)
+SearchBar.Parent = GUI
+SearchBar.ZIndex = 4
+SearchBar.Active = false
+
+local SearchBarBG = Instance.new("Frame")
+SearchBarBG.Size = UDim2.new(0, 620, 0, 70)
+SearchBarBG.Position = UDim2.new(0.5, -310, 0.3, -10)
+SearchBarBG.BackgroundTransparency = 0
+SearchBarBG.BackgroundColor3 = Color3.new(0.133333, 0.133333, 0.133333)
+SearchBarBG.Parent = GUI
+local SearchBarBGCornerFrame = Instance.new("UICorner")
+SearchBarBGCornerFrame.CornerRadius = UDim.new(0.2, 0)
+SearchBarBGCornerFrame.Parent = SearchBarBG
+SearchBarBG.ZIndex = 3
+SearchBarBG.Active = false
+
+local CommandText = Instance.new("TextBox")
+CommandText.Size = UDim2.new(0.92, 0, 0.9, 0)
+CommandText.Position = UDim2.new(0.05, 0, 0, 0)
+CommandText.Font = Enum.Font.Code
+CommandText.TextSize = 40
+CommandText.TextColor3 = Color3.new(1, 1, 1)
+CommandText.BackgroundTransparency = 1
+CommandText.TextXAlignment = Enum.TextXAlignment.Left
+CommandText.Text = ""
+CommandText.ZIndex = 5
+CommandText.Parent = SearchBar
+
+local CommandLabel = Instance.new("TextLabel")
+CommandLabel.Size = UDim2.new(0, 20, 0.9, 0)
+CommandLabel.Position = UDim2.new(0, 10, 0, 0)
+CommandLabel.Font = Enum.Font.Code
+CommandLabel.TextSize = 40
+CommandLabel.TextColor3 = Color3.new(1, 1, 1)
+CommandLabel.BackgroundTransparency = 1
+CommandLabel.Text = ""
+CommandLabel.ZIndex = 5
+CommandLabel.TextTransparency = 1
+CommandLabel.Parent = SearchBar
+
+local blurEffect = Instance.new("BlurEffect")
+blurEffect.Size = 0
+blurEffect.Parent = game:GetService("Lighting")
+
+local animFramerate = 0.01
+local openingTime = 0.2
+local closingTime = 0.1
+
+local SearchBarInitSize = UDim2.new(0, 0, 0, 50)
+local SearchBarInitPos = UDim2.new(0.5, 0, 0.3, 0)
+local SearchBarBGInitSize = UDim2.new(0, 0, 0, 70)
+local SearchBarBGInitPos = UDim2.new(0.5, 0, 0.3, -10)
+local SearchBarFinalSize = UDim2.new(0, 600, 0, 50)
+local SearchBarFinalPos = UDim2.new(0.5, -300, 0.3, 0)
+local SearchBarBGFinalSize = UDim2.new(0, 620, 0, 70)
+local SearchBarBGFinalPos = UDim2.new(0.5, -310, 0.3, -10)
+
+local success, textChannels = pcall(function()
+	return game:GetService("TextChatService").TextChannels
+end)
+
+if success then
+	print("New chat system detected")
+	msg = function(txt) game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync(txt) end
+else
+	print("Old chat system detected")
+	msg = function(txt) game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(txt, "All") end
+end
+
+--Animations
+
+function Open()
+	opened = nil
+	
+
+	CommandText.Active = true
+	BlurFrame.Transparency = 1
+	blurEffect.Size = 0
+
+	CommandText:CaptureFocus()
+
+	for i=0, openingTime/animFramerate do
+		local alpha = i / (openingTime / animFramerate)
+
+		BlurFrame.Transparency = 1 - alpha/2
+		blurEffect.Size = alpha*30
+
+		CommandLabel.TextTransparency = 1 - alpha
+
+		SearchBar.Size = SearchBarInitSize:Lerp(SearchBarFinalSize, math.sqrt(alpha))
+		SearchBarBG.Size = SearchBarBGInitSize:Lerp(SearchBarBGFinalSize, math.sqrt(alpha))
+
+		SearchBar.Position = SearchBarInitPos:Lerp(SearchBarFinalPos, math.sqrt(alpha))
+		SearchBarBG.Position = SearchBarBGInitPos:Lerp(SearchBarBGFinalPos, math.sqrt(alpha))
+
+		wait(animFramerate)
+	end
+
+	SearchBar.Size = SearchBarFinalSize
+	SearchBarBG.Size = SearchBarBGFinalSize
+
+	SearchBar.Position = SearchBarFinalPos
+	SearchBarBG.Position = SearchBarBGFinalPos
+
+	opened = true
+
+end
+
+function Close()
+	opened = nil
+
+	CommandText:ReleaseFocus()
+
+	for i=0, closingTime/animFramerate do
+		local alpha = i / (closingTime / animFramerate)
+
+		BlurFrame.Transparency =  0.5 + alpha/2
+		blurEffect.Size = 30 - alpha*30
+
+		CommandLabel.TextTransparency = alpha
+		CommandText.TextTransparency = alpha
+
+		SearchBar.Size = SearchBarFinalSize:Lerp(SearchBarInitSize,  (alpha*alpha))
+		SearchBarBG.Size = SearchBarBGFinalSize:Lerp(SearchBarBGInitSize,  (alpha*alpha))
+
+		SearchBar.Position = SearchBarFinalPos:Lerp(SearchBarInitPos,  (alpha*alpha))
+		SearchBarBG.Position = SearchBarBGFinalPos:Lerp(SearchBarBGInitPos, (alpha*alpha))
+
+		wait(animFramerate)
+	end
+
+	SearchBar.Size = SearchBarInitSize
+	SearchBarBG.Size = SearchBarBGInitSize
+
+	SearchBar.Position = SearchBarInitPos
+	SearchBarBG.Position = SearchBarBGInitPos
+
+	CommandText.Text = ""
+	CommandText.TextTransparency = 0
+	SearchBar.Transparency = 1
+	CommandText:ReleaseFocus()
+	CommandText.Active = false
+
+	opened = false
+
+end
+
+
+local function onInput(input)
+	if input.KeyCode == Enum.KeyCode.Insert then
+		if opened then Close() else if opened == false then Open() end end
+		print(opened)
+	end
+end
+
+UserInputService.InputBegan:Connect(onInput)
+
+local function sendCommand(command)
+	msg(command)
+
+	spawn(function()
+		local gui = script.Parent
+
+		local label = Instance.new("TextLabel")
+		label.Text = command
+		label.Font = Enum.Font.Code
+		label.TextSize = 25
+		label.TextColor3 = Color3.new(1, 1, 1)
+		label.Size = UDim2.new(0, 200, 0, 25) 
+		label.Position = UDim2.new(0.5, -100, 0, 200)
+		label.TextXAlignment = Enum.TextXAlignment.Center
+		label.BackgroundTransparency = 1
+		label.Parent = BlurFrame
+
+		for i=0, openingTime/animFramerate do
+			local alpha = i / (openingTime / animFramerate)
+			label.Position = UDim2.new(0.5, -100, 0, 200-100*alpha)
+			label.TextTransparency = alpha*alpha
+			wait(animFramerate)
+		end
+
+		label:Destroy()
+	end)
+end
+
+function translate(text)
+    math.randomseed(os.time())
+    local obfuscatedText = ""
+    local unicodeChars = {
+
+    "\u{031D}", -- Combining up tack below
+    "\u{031E}", -- Combining down tack below
+    "\u{031F}", -- Combining plus sign below
+    "\u{0320}", -- Combining minus sign below
+    "\u{0321}", -- Combining palatalized hook below
+    "\u{0322}", -- Combining retroflex hook below
+    "\u{0323}", -- Combining dot below
+    "\u{0324}", -- Combining diaeresis below
+    "\u{0325}", -- Combining ring below
+    "\u{0326}", -- Combining comma below
+    "\u{0327}", -- Combining cedilla
+    "\u{0328}", -- Combining ogonek
+    "\u{0329}", -- Combining vertical line below
+    "\u{032A}", -- Combining bridge below
+    "\u{032B}", -- Combining inverted double arch below
+    "\u{032C}", -- Combining caron below
+    "\u{032D}", -- Combining circumflex accent below
+    "\u{032E}", -- Combining breve below
+    "\u{032F}", -- Combining inverted breve below
+    "\u{0330}", -- Combining tilde below
+
+    "\u{0339}", -- Combining right half ring below
+    "\u{033A}", -- Combining inverted bridge below
+    "\u{033B}", -- Combining square below
+    "\u{033C}", -- Combining seagull below
+    }
+    local charReplacements = {
+        ["o"] = "\u{043E}", -- Cyrillic 'o'
+        ["s"] = "\u{0455}", -- Latin 's' with hook
+        ["r"] = "\u{027E}", -- Weird r
+        ["i"] = "\u{0456}",
+        ["h"] = "ẖ",
+        ["a"] = "ɑ",
+        ["u"] = "ṷ",
+        ["c"] = "с",
+        ["g"] = "ɡ",
+        ["n"] = "ṇ",
+        ["e"] = "e",
+        ["t"] = "ṭ",
+        ["l"] = "ḻ",
+        ["d"] = "d",
+        ["k"] = "k",
+        ["w"] = "ẇ"
+    }
+
+    for i = 1, #text do
+        local char = text:sub(i, i)
+        if charReplacements[char] and math.random() < 1 then
+            obfuscatedText = obfuscatedText .. charReplacements[char]
+        else
+            obfuscatedText = obfuscatedText .. char
+        end
+
+        if math.random() < 1 then
+            obfuscatedText = unicodeChars[math.random(1, #unicodeChars)] .. obfuscatedText .. unicodeChars[math.random(1, #unicodeChars)].. unicodeChars[math.random(1, #unicodeChars)]
+        end
+
+    end
+
+    return obfuscatedText
+end
+
+
+local function onInputValidation(enterPressed)
+	if enterPressed then
+		sendCommand(translate(CommandText.Text))
+		if opened then Close() end
+	end
+end
+
+
+CommandText.FocusLost:Connect(onInputValidation)
+
+local textChanging = false
+
+local function onTextChanged()
+
+	local maxLength = 60
+
+	textChanging = true
+	CommandText.CursorPosition = 100
+	if #CommandText.Text > maxLength then
+		CommandText.Text = string.sub(CommandText.Text, 1, maxLength)
+	end
+end
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0, 10, 1, -60)
+ToggleButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+ToggleButton.TextColor3 = Color3.new(1, 1, 1)
+ToggleButton.Text = "Toggle\nPress INSERT"
+ToggleButton.Parent = GUI
+
+
+ToggleButton.MouseButton1Click:Connect(function()
+    if opened then
+        Close()
+    else
+        Open()
+    end
+end)
+
+
+CommandText.Changed:Connect(onTextChanged)
+Close()
+
+-- Anti Chat Logger
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/raditself/d/antichatlogger", true))()
+
+
+
+
