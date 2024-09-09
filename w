@@ -339,7 +339,7 @@ elseif game.PlaceId == 537413528 then
 elseif game.PlaceId == 8690998110 then
 	loadstring(game:HttpGet('https://raw.githubusercontent.com/yofriendfromschool1/Sky-Hub/main/games/gorillatagprofessional.lua'))()
 -- Murder Mystery 2 or MM2
-elseif game.PlaceId == 142823291 then
+elseif game.PlaceId == 1428232910 then
 	loadstring(game:HttpGet('https://raw.githubusercontent.com/yofriendfromschool1/Sky-Hub/main/games/murdermystery2.lua'))()
 -- Blox Fruits
 elseif game.PlaceId == 2753915549 or game.PlaceId == 4442272183 or game.PlaceId == 7449423635 then
