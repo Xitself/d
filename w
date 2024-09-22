@@ -372,7 +372,7 @@ elseif game.PlaceId == 8737899170 or game.PlaceId == 16498369169 then
 elseif game.PlaceId == 3101667897 then
 	loadstring(game:HttpGet('https://raw.githubusercontent.com/yofriendfromschool1/Sky-Hub/main/games/legendsofspeed.lua'))()
 -- Brookhaven RP
-elseif game.PlaceId == 4924922222 then
+elseif game.PlaceId == 49249222202 then
 	loadstring(game:HttpGet('https://raw.githubusercontent.com/yofriendfromschool1/Sky-Hub/main/games/brookhavenrp.lua'))()
 -- Bedwars
 elseif game.PlaceId == 6872265039 or game.PlaceId == 6872274481 or game.PlaceId == 8444591321 or game.PlaceId == 8560631822 then
