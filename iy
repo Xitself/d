@@ -10144,7 +10144,7 @@ end)
 
 addcmd('explorer', {'dex'}, function(args, speaker)
 	notify('Loading', 'Hold on a sec')
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/raditself/d/main/dex"))()
 end)
 
 addcmd('olddex', {'odex'}, function(args, speaker)
@@ -10231,12 +10231,12 @@ addcmd('remotespy',{'rspy'},function(args, speaker)
 	notify("Loading",'Hold on a sec')
 	-- Full credit to exx, creator of SimpleSpy
 	-- also thanks to NoobSploit for fixing
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/SimpleSpyV3/main.lua"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/raditself/d/main/simplespy"))()
 end)
 
-addcmd('audiologger',{'alogger'},function(args, speaker)
+addcmd('xx',{'alogger'},function(args, speaker)
 	notify("Loading",'Hold on a sec')
-	loadstring(game:HttpGet(('https://raw.githubusercontent.com/infyiff/backup/main/audiologger.lua'),true))()
+	loadstring(game:HttpGet(('https://raw.githubusercontent.com/raditself/a/main/xx'),true))()
 end)
 
 local loopgoto = nil
