@@ -14,7 +14,7 @@ if not game:IsLoaded() then
     notLoaded.Parent = COREGUI
     notLoaded.Text = "Infinite Yield is waiting for the game to load"
     game.Loaded:Wait()
-    notLoaded:Destroy()
+    
 end
 
 currentVersion = "6"
