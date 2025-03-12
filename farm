@@ -1,0 +1,335 @@
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local userInterface = player:WaitForChild("PlayerGui")
+
+local maps = {
+    "Factory",
+    "BioLab",
+    "House2",
+    "Hospital3",
+    "Workplace",
+    "MilBase",
+    "Bank2",
+    "Hotel2",
+    "Mansion2",
+    "Office3",
+    "PoliceStation",
+    "ResearchFacility",
+    "Hotel",
+    "VampireCastle"
+}
+
+print("Debug: Loaded player, character, and maps.")
+
+-- Create the ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.ResetOnSpawn = false
+screenGui.Parent = userInterface
+screenGui.Name = "AutoFarmGui"
+
+-- Create the main frame for the GUI
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Parent = screenGui
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+-- Create a UICorner for rounded corners
+local uiCorner = Instance.new("UICorner")
+uiCorner.Parent = mainFrame
+
+-- Create a title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Parent = mainFrame
+titleLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+titleLabel.BackgroundTransparency = 0.5
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Text = "AutoFarm & ESP Control"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 20
+
+-- Create the Speed Slider Frame
+local sliderFrame = Instance.new("Frame", mainFrame)
+sliderFrame.Size = UDim2.new(0, 100, 0, 50)
+sliderFrame.Position = UDim2.new(0.5, -50, 0.5, -60) -- Adjusted position
+
+-- Create a UICorner for the slider frame
+local sliderFrameCorner = Instance.new("UICorner")
+sliderFrameCorner.Parent = sliderFrame
+
+local slider = Instance.new("TextButton", sliderFrame)
+slider.Size = UDim2.new(1, 0, 1, 0)
+slider.Text = "Speed: 2"
+
+-- Create a UICorner for the slider button
+local sliderButtonCorner = Instance.new("UICorner")
+sliderButtonCorner.Parent = slider
+
+local speedValue = 2
+local autoFarmEnabled = false
+local noclipEnabled = false
+local mapFirstCoinCollected = {}
+local collectMode = "Closest" -- Default mode
+
+local configFolder = workspace:FindFirstChild("AutoFarmConfig")
+if not configFolder then
+    configFolder = Instance.new("Folder")
+    configFolder.Name = "AutoFarmConfig"
+    configFolder.Parent = workspace
+end
+
+local speedConfig = Instance.new("IntValue", configFolder)
+speedConfig.Name = "SpeedValue"
+speedConfig.Value = speedValue
+
+local autoFarmConfig = Instance.new("BoolValue", configFolder)
+autoFarmConfig.Name = "AutoFarmEnabled"
+autoFarmConfig.Value = autoFarmEnabled
+
+slider.MouseButton1Click:Connect(function()
+    speedValue = speedValue + 1
+    if speedValue > 10 then
+        speedValue = 1
+    end
+    slider.Text = "Speed: " .. tostring(speedValue)
+    speedConfig.Value = speedValue
+    print("Debug: Speed adjusted to: " .. tostring(speedValue))
+end)
+
+-- Create the Start/Stop Button
+local startStopButton = Instance.new("TextButton", mainFrame)
+startStopButton.Size = UDim2.new(0, 100, 0, 50)
+startStopButton.Position = UDim2.new(0.5, -50, 0.5, -5) -- Adjusted position
+startStopButton.Text = "Start AutoFarm"
+
+-- Create a UICorner for the start stop button
+local startStopButtonCorner = Instance.new("UICorner")
+startStopButtonCorner.Parent = startStopButton
+
+-- Create the Mode Selection Button
+local modeButton = Instance.new("TextButton", mainFrame)
+modeButton.Size = UDim2.new(0, 100, 0, 50)
+modeButton.Position = UDim2.new(0.5, -50, 0.5, 50) -- Adjusted position
+modeButton.Text = "Mode: Closest"
+
+-- Create a UICorner for the mode button
+local modeButtonCorner = Instance.new("UICorner")
+modeButtonCorner.Parent = modeButton
+
+startStopButton.MouseButton1Click:Connect(function()
+    autoFarmEnabled = not autoFarmEnabled
+    autoFarmConfig.Value = autoFarmEnabled
+    if autoFarmEnabled then
+        startStopButton.Text = "Stop AutoFarm"
+        noclipEnabled = true
+        print("Debug: AutoFarm started.")
+        startAutoFarm()
+    else
+        startStopButton.Text = "Start AutoFarm"
+        noclipEnabled = false
+        print("Debug: AutoFarm stopped.")
+    end
+end)
+
+modeButton.MouseButton1Click:Connect(function()
+    if collectMode == "Closest" then
+        collectMode = "Random"
+        modeButton.Text = "Mode: Random"
+    else
+        collectMode = "Closest"
+        modeButton.Text = "Mode: Closest"
+    end
+    print("Debug: Collect mode changed to: " .. collectMode)
+end)
+
+local function noclip()
+    while noclipEnabled do
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+        wait(0.1)
+    end
+end
+
+coroutine.wrap(noclip)()
+
+-- Function to check if teleportation is needed
+local function shouldTeleportToCoin(coin)
+    local distance = (humanoidRootPart.Position - coin.Position).Magnitude
+    local maxDistance = 1000 -- Adjust this value to control how far away you can teleport
+    return distance > maxDistance
+end
+
+local function teleportToCoin(coin)
+    print("Debug: Teleporting to coin: " .. coin:GetFullName())
+    humanoidRootPart.CFrame = coin.CFrame
+
+    if coin:FindFirstChild("TouchInterest") then
+        print("Debug: Firing touch interest for coin: " .. coin:GetFullName())
+        firetouchinterest(humanoidRootPart, coin, 0)
+        firetouchinterest(humanoidRootPart, coin, 1)
+    end
+
+    wait(0.1)
+
+    humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+end
+
+local function tweenToCoin(coin)
+    print("Debug: Tweening to coin: " .. coin:GetFullName())
+    local distance = (humanoidRootPart.Position - coin.Position).Magnitude
+
+    local walkSpeed = 16
+    local adjustedSpeed = walkSpeed * 1.2
+    local tweenSpeed = distance / adjustedSpeed
+
+    tweenSpeed = math.max(tweenSpeed, 0.5)
+
+    local tweenInfo = TweenInfo.new(
+        tweenSpeed,
+        Enum.EasingStyle.Cubic,
+        Enum.EasingDirection.InOut
+    )
+    local tweenGoal = {CFrame = coin.CFrame}
+    local tween = TweenService:Create(humanoidRootPart, tweenInfo, tweenGoal)
+    tween:Play()
+
+    if character and character:FindFirstChild("Humanoid") and character.Humanoid.Health > 0 then
+        tween.Completed:Wait()
+
+        if coin:FindFirstChild("TouchInterest") then
+            print("Debug: Firing touch interest for coin: " .. coin:GetFullName())
+            firetouchinterest(humanoidRootPart, coin, 0)
+            firetouchinterest(humanoidRootPart, coin, 1)
+        end
+
+        wait(0.1)
+
+        humanoidRootPart.Velocity = Vector3.new(0, 0, 0)
+    else
+        print("Debug: Player is no longer alive, stopping tween.")
+        tween:Cancel()
+    end
+end
+
+-- Function to check if the coin is valid and should be collected
+local function isValidCoin(coin)
+    return coin:FindFirstChild("CoinVisual") and coin:IsDescendantOf(workspace)
+end
+
+-- Function to sort coins by proximity (distance from player)
+local function sortCoinsByProximity(coins)
+    table.sort(coins, function(a, b)
+        return (humanoidRootPart.Position - a.Position).Magnitude < (humanoidRootPart.Position - b.Position).Magnitude
+    end)
+end
+
+-- Updated function to start AutoFarm
+function startAutoFarm()
+    coroutine.wrap(function()
+        while autoFarmEnabled do
+            for _, mapName in ipairs(maps) do
+                local map = workspace:FindFirstChild(mapName)
+                if map then
+                    print("Debug: Found map: " .. mapName)
+                    local coinContainer = map:FindFirstChild("CoinContainer")
+                    if coinContainer then
+                        print("Debug: Found coin container in map: " .. mapName)
+                        local coins = {}
+                        
+                        -- Collect all valid coins
+                        for _, coin in ipairs(coinContainer:GetChildren()) do
+                            if isValidCoin(coin) then
+                                table.insert(coins, coin)
+                            else
+                                print("Debug: Skipping invalid coin: " .. coin:GetFullName())
+                            end
+                        end
+
+                        if #coins > 0 then
+                            -- Prioritize closest coin if 'Closest' mode is selected
+                            if collectMode == "Closest" then
+                                sortCoinsByProximity(coins)
+
+                                -- Collect the closest coin first
+                                local firstCoin = coins[1]
+                                if firstCoin:FindFirstChild("CoinVisual") then
+                                    if shouldTeleportToCoin(firstCoin.CoinVisual) then
+                                        teleportToCoin(firstCoin.CoinVisual)
+                                    else
+                                        tweenToCoin(firstCoin.CoinVisual)
+                                    end
+
+                                    -- Process other coins after the first one
+                                    for _, coin in ipairs(coins) do
+                                        if not autoFarmEnabled then
+                                            print("Debug: AutoFarm stopped, exiting loop.")
+                                            return
+                                        end
+                                        if coin:FindFirstChild("CoinVisual") then
+                                            if shouldTeleportToCoin(coin.CoinVisual) then
+                                                teleportToCoin(coin.CoinVisual)
+                                            else
+                                                tweenToCoin(coin.CoinVisual)
+                                            end
+                                        end
+                                    end
+                                end
+                            elseif collectMode == "Random" then
+                                -- Random collection mode (not sorted)
+                                local randomCoin = coins[math.random(1, #coins)]
+                                if randomCoin:FindFirstChild("CoinVisual") then
+                                    if shouldTeleportToCoin(randomCoin.CoinVisual) then
+                                        teleportToCoin(randomCoin.CoinVisual)
+                                    else
+                                        tweenToCoin(randomCoin.CoinVisual)
+                                    end
+                                end
+                            end
+                        end
+                    else
+                        print("Debug: No coin container found in map: " .. mapName)
+                    end
+                else
+                    print("Debug: Map not found: " .. mapName)
+                end
+            end
+            wait(1)
+        end
+    end)()
+end
+
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    print("Debug: Character respawned, GUI remains visible.")
+    if autoFarmEnabled then
+        print("Debug: Resuming AutoFarm after respawn.")
+        startAutoFarm()
+    end
+end)
+
+player.OnTeleport:Connect(function(teleportState)
+    if teleportState == Enum.TeleportState.Failed then
+        local rejoinButton = Instance.new("TextButton", screenGui)
+        rejoinButton.Size = UDim2.new(0, 200, 0, 50)
+        rejoinButton.Position = UDim2.new(0.5, -100, 0, 130)
+        rejoinButton.Text = "Rejoin Game"
+        rejoinButton.MouseButton1Click:Connect(function()
+            game:GetService("TeleportService"):Teleport(game.PlaceId, player)
+        end)
+    end
+end)
+
+print("Auto Farm script loaded with GUI. Use the buttons to control the autofarm.")

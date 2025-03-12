@@ -1,0 +1,271 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+local COREGUI = game.CoreGui
+local TeleportService = game:GetService("TeleportService")
+local HttpService = game:GetService("HttpService")
+
+-- Create the ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ESPGui"
+screenGui.Parent = COREGUI
+
+-- Create the main frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Parent = screenGui
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+mainFrame.Active = true
+mainFrame.Draggable = true
+
+-- Create a UICorner for rounded corners
+local uiCorner = Instance.new("UICorner")
+uiCorner.Parent = mainFrame
+
+-- Create a title label
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "TitleLabel"
+titleLabel.Parent = mainFrame
+titleLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+titleLabel.BackgroundTransparency = 0.5
+titleLabel.Size = UDim2.new(1, 0, 0, 30)
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Text = "ESP & Camera Control GUI"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 20
+
+-- Create the ESP toggle button
+local espToggleButton = Instance.new("TextButton")
+espToggleButton.Name = "ESPToggleButton"
+espToggleButton.Parent = mainFrame
+espToggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+espToggleButton.Position = UDim2.new(0.5, -50, 0.5, -60) -- Adjusted position
+espToggleButton.Size = UDim2.new(0, 100, 0, 50)
+espToggleButton.Font = Enum.Font.SourceSansBold
+espToggleButton.Text = "Toggle ESP"
+espToggleButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+espToggleButton.TextSize = 18
+
+-- Create a UICorner for the teleport button
+local espToggleButtonCorner = Instance.new("UICorner")
+espToggleButtonCorner.Parent = espToggleButton
+
+-- Create the Camera Reset button
+local cameraResetButton = Instance.new("TextButton")
+cameraResetButton.Name = "CameraResetButton"
+cameraResetButton.Parent = mainFrame
+cameraResetButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+cameraResetButton.Position = UDim2.new(0.5, -50, 0.5, -5) -- Adjusted position
+cameraResetButton.Size = UDim2.new(0, 100, 0, 50)
+cameraResetButton.Font = Enum.Font.SourceSansBold
+cameraResetButton.Text = "Reset Camera"
+cameraResetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+cameraResetButton.TextSize = 18
+
+-- Create a UICorner for the teleport button
+local cameraResetButtonCorner = Instance.new("UICorner")
+cameraResetButtonCorner.Parent = cameraResetButton
+
+-- Create the Teleport Button
+local teleportButton = Instance.new("TextButton")
+teleportButton.Name = "TeleportButton"
+teleportButton.Parent = mainFrame
+teleportButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0) -- Orange color
+teleportButton.Position = UDim2.new(0.5, -50, 0.5, 50) -- Adjusted position
+teleportButton.Size = UDim2.new(0, 100, 0, 50)
+teleportButton.Font = Enum.Font.SourceSansBold
+teleportButton.Text = "Teleport Server"
+teleportButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+teleportButton.TextSize = 18
+
+-- Create a UICorner for the teleport button
+local teleportButtonCorner = Instance.new("UICorner")
+teleportButtonCorner.Parent = teleportButton
+
+-- State variable to track if ESP is enabled
+local espEnabled = false
+
+-- Function to create highlights for all players
+function CreateAllHighlight()
+    for _, player in pairs(Players:GetChildren()) do
+        if player ~= LP and player.Character and not player.Character:FindFirstChild("Highlight") then
+            Instance.new("Highlight", player.Character)
+        end
+    end
+end
+
+-- Function to update highlights for all players
+function UpdateAllHighlights()
+    for _, player in pairs(Players:GetChildren()) do
+        if player ~= LP and player.Character and player.Character:FindFirstChild("Highlight") then
+            local Highlight = player.Character:FindFirstChild("Highlight")
+            Highlight.FillColor = Color3.fromRGB(0, 225, 0) -- Set highlight color
+        end
+    end
+end
+
+-- Function to create ESP for a specific player
+function CreateESP(player)
+    if player.Character and player.Character:FindFirstChild('Head') then
+        local ESPholder = Instance.new("Folder")
+        ESPholder.Name = player.Name..'_ESP'
+        ESPholder.Parent = COREGUI
+
+        local BillboardGui = Instance.new("BillboardGui")
+        local TextLabel = Instance.new("TextLabel")
+        BillboardGui.Adornee = player.Character.Head
+        BillboardGui.Name = player.Name
+        BillboardGui.Parent = ESPholder
+        BillboardGui.Size = UDim2.new(0, 100, 0, 150)
+        BillboardGui.StudsOffset = Vector3.new(0, 1, 0)
+        BillboardGui.AlwaysOnTop = true
+
+        TextLabel.Parent = BillboardGui
+        TextLabel.BackgroundTransparency = 1
+        TextLabel.Position = UDim2.new(0, 0, 0, -50)
+        TextLabel.Size = UDim2.new(0, 100, 0, 100)
+        TextLabel.Font = Enum.Font.SourceSansSemibold
+        TextLabel.TextSize = 17
+        TextLabel.TextColor3 = Color3.new(1, 1, 1) -- White text
+        TextLabel.TextStrokeTransparency = 0.3
+        TextLabel.TextYAlignment = Enum.TextYAlignment.Bottom
+        TextLabel.Text = '@'..player.Name .. ' | ' .. player.DisplayName
+        TextLabel.ZIndex = 10
+    end
+end
+
+-- Function to update ESP for all players
+function UpdateESP()
+    for _, player in pairs(Players:GetChildren()) do
+        if player ~= LP then
+            CreateESP(player)
+        end
+    end
+end
+
+-- Function to toggle ESP
+local function toggleESP()
+    espEnabled = not espEnabled
+    espToggleButton.BackgroundColor3 = espEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+
+    if espEnabled then
+        CreateAllHighlight()
+        UpdateAllHighlights()
+        UpdateESP()
+    else
+        -- Remove ESP elements if disabled
+        for _, player in pairs(Players:GetChildren()) do
+            if player ~= LP then
+                local espFolder = COREGUI:FindFirstChild(player.Name..'_ESP')
+                if espFolder then
+                    espFolder:Destroy()
+                end
+            end
+        end
+
+        -- Destroy highlights for all players
+        for _, player in ipairs(Players:GetPlayers()) do
+            local character = player.Character
+            if character then
+                local highlight = character:FindFirstChild("Highlight")
+                if highlight then
+                    highlight:Destroy()
+                end
+            end
+        end
+
+        -- Clean up any remaining ESP folders in CoreGui
+        for _, child in ipairs(COREGUI:GetChildren()) do
+            if child:IsA("Folder") and child.Name:find("_ESP") then
+                child:Destroy()
+            end
+        end
+    end
+end
+
+-- Function to reset the camera
+local function resetCamera()
+    local character = LP.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local camera = workspace.CurrentCamera
+        camera.CameraSubject = character.Humanoid
+        camera.CameraType = Enum.CameraType.Custom
+        camera.CFrame = character.Head.CFrame * CFrame.new(0, 2, -10) -- Adjust the position behind the character
+
+        -- Set camera properties
+        LP.CameraMinZoomDistance = 0.5
+        LP.CameraMaxZoomDistance = 400
+        LP.CameraMode = Enum.CameraMode.Classic
+    end
+end
+
+-- Function to teleport to a server with the most players
+local function teleportToServer()
+    local Number = 0
+    local SomeSRVS = {}
+    local success, response = pcall(function()
+        return HttpService:JSONDecode(game:HttpGetAsync("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"))
+    end)
+
+    if success and response and response.data then
+        for _, v in ipairs(response.data) do
+            if type(v) == "table" and v.maxPlayers > v.playing and v.id ~= game.JobId then
+                if v.playing > Number then
+                    Number = v.playing
+                    SomeSRVS[1] = v.id
+                end
+            end
+        end
+    end
+
+    if #SomeSRVS > 0 then
+        TeleportService:TeleportToPlaceInstance(game.PlaceId, SomeSRVS[1])
+    else
+        print("No available servers found.")
+    end
+end
+
+-- Connect the button to toggle the ESP feature
+espToggleButton.MouseButton1Click:Connect(toggleESP)
+
+-- Connect the button to reset the camera
+cameraResetButton.MouseButton1Click:Connect(resetCamera)
+
+-- Connect the button to teleport to a server
+teleportButton.MouseButton1Click:Connect(teleportToServer)
+
+-- Create highlights and ESP for existing players
+CreateAllHighlight()
+UpdateAllHighlights()
+UpdateESP()
+
+-- Connect to PlayerAdded and CharacterAdded events
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        wait(2) -- Wait for the character to load
+        if espEnabled then
+            CreateAllHighlight()
+            UpdateAllHighlights()
+            CreateESP(player)
+        end
+    end)
+end)
+
+-- Update highlights and ESP on character added
+LP.CharacterAdded:Connect(function()
+    wait(2) -- Wait for the character to load
+    if espEnabled then
+        CreateAllHighlight()
+        UpdateAllHighlights()
+    end
+end)
+
+-- Update highlights on heartbeat
+RunService.Heartbeat:Connect(function()
+    if espEnabled then
+        UpdateAllHighlights()
+    end
+end)
